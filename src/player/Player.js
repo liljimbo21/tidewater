@@ -310,7 +310,8 @@ export class Player {
 		if ( inp.down( 'KeyD' ) ) wish.add( _right );
 		if ( inp.down( 'KeyA' ) ) wish.sub( _right );
 		if ( inp.down( 'Space' ) ) wish.y += 1;
-		if ( inp.down( 'KeyC' ) || inp.down( 'ControlLeft' ) ) wish.y -= 1;
+		// (not Ctrl: Ctrl+W, diving forward, closes the browser tab and can't be intercepted)
+		if ( inp.down( 'KeyC' ) ) wish.y -= 1;
 		if ( wish.lengthSq() > 0 ) wish.normalize();
 
 		const atSurface = this.floating && p.y > surfaceY - 0.45;
@@ -603,7 +604,7 @@ export class Player {
 		if ( inp.down( 'KeyD' ) ) _wish.add( _right );
 		if ( inp.down( 'KeyA' ) ) _wish.sub( _right );
 		if ( _wish.lengthSq() > 0 ) _wish.normalize();
-		const speed = ( inp.down( 'ShiftLeft' ) ? 2.6 : 1.6 );
+		const speed = ( inp.down( 'ShiftLeft' ) || inp.down( 'ShiftRight' ) ? 2.6 : 1.6 );
 		const k = 1 - Math.exp( - 12 * dt );
 		const v = this.deckVel;
 		v.x += ( _wish.x * speed - v.x ) * k;
@@ -741,7 +742,7 @@ export class Player {
 		}
 
 		let throttle = 0;
-		if ( inp.down( 'KeyW' ) ) throttle = inp.down( 'ShiftLeft' ) ? 1 : 0.7;
+		if ( inp.down( 'KeyW' ) ) throttle = inp.down( 'ShiftLeft' ) || inp.down( 'ShiftRight' ) ? 1 : 0.7;
 		if ( inp.down( 'KeyS' ) ) throttle = - 0.6;
 		let steer = 0;
 		if ( inp.down( 'KeyA' ) ) steer += 1;

@@ -358,9 +358,15 @@ export class FishingRod {
 
 		}
 
+		// substepped: semi-implicit Euler on this spring diverges for steps over ~0.098 s (dt is clamped to 0.1)
 		const K = 250, C = 8; // ~2.5 Hz, lightly damped
-		this.bendVel += ( ( bendT - this.bend ) * K - this.bendVel * C ) * dt;
-		this.bend += this.bendVel * dt;
+		const steps = Math.ceil( dt * 60 ), h = dt / Math.max( steps, 1 );
+		for ( let i = 0; i < steps; i ++ ) {
+
+			this.bendVel += ( ( bendT - this.bend ) * K - this.bendVel * C ) * h;
+			this.bend += this.bendVel * h;
+
+		}
 		this.load += ( loadT - this.load ) * ( 1 - Math.exp( - dt * 6 ) );
 		// bend direction: toward the bobber (rod space, across the blank) when the line is out,
 		// otherwise down toward the reel side (negative bend = loaded back up)

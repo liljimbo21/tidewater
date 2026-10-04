@@ -171,6 +171,24 @@ ok( Object.keys( defaultUpgrades() ).length === Object.keys( UPGRADES ).length &
 	ok( st.buy( 'fishFinder' ) && st.stats.finder === true && st.buy( 'fishFinder' ) === null, 'fish finder: one level' );
 
 }
+{
+
+	// a damaged save: out-of-range levels, fish without id / value, a duplicate id, a log entry without a best
+	const bad = { v: 1, money: 'lots', fuel: - 3, nextId: 'x',
+		inventory: [ { species: 'grunt', kg: 0.8 }, { id: 4, species: 'jack', kg: 2, value: 12 }, { id: 4, species: 'mullet', kg: 0.5 }, { id: 9, species: 'nope', kg: 1 }, { id: 10, species: 'grunt', kg: - 1 }, null ],
+		log: { grunt: { count: 2 }, nope: { count: 1, bestKg: 1 }, jack: { bestKg: 2 } },
+		upgrades: { reel: 5, line: - 2, rod: 1.5, hold: 1 } };
+	const st = new GameState( { getItem: () => JSON.stringify( bad ), setItem: () => {} } );
+	ok( st.load() && st.money === 0 && st.fuel === 0, 'damaged save: wallet and fuel sane' );
+	const ids = st.inventory.map( ( f ) => f.id );
+	ok( st.inventory.length === 3 && new Set( ids ).size === 3 && ids.every( Number.isInteger ) && st.inventory.every( ( f ) => Number.isFinite( f.value ) && f.value > 0 ), 'damaged save: bad fish dropped, ids and values filled in' );
+	ok( Object.keys( st.log ).join() === 'grunt' && st.log.grunt.bestKg === 0 && st.log.grunt.bestCm === 0, 'damaged save: log entries without a count or species dropped, missing best is 0' );
+	ok( Number.isFinite( st.holdValue ) && st.addFish( 'grunt', 0.6 ).id > Math.max( ...ids ) && st.log.grunt.bestKg === 0.6, 'damaged save: hold value finite, new ids continue, log updates' );
+	ok( st.upgrades.reel === UPGRADES.reel.levels.length - 1 && st.upgrades.line === 0 && st.upgrades.rod === 0 && st.upgrades.hold === 1, 'damaged save: upgrade levels clamped to the track' );
+	st.sell();
+	ok( Number.isFinite( st.money ) && st.inventory.length === 0, 'damaged save: selling everything keeps the wallet a number' );
+
+}
 console.log( `value check ${ value }` );
 console.log( fails ? `${ fails } FAILED` : 'all passed' );
 process.exit( fails ? 1 : 0 );

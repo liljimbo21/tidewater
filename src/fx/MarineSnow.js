@@ -1,6 +1,7 @@
 import { Vector2, Vector3, PlaneGeometry, InstancedBufferGeometry, Mesh } from '../engine/index.js';
 import { UniformBlock, ShaderModule, Material } from '../engine/webgpu.js';
 import { LAYERS } from '../core/SceneRenderer.js';
+import { FLASH } from '../materials/LocalLights.js';
 
 // Suspended particles in the water around the camera (marine snow, plankton, sand grains).
 // Positions are procedural (hash of the instance) inside a box that wraps around the camera, so
@@ -140,12 +141,8 @@ fn snowHash3( n: f32 ) -> vec3f { return fract( sin( vec3f( n, n + 17.13, n + 43
 		this.mesh.layers.set( LAYERS.OPAQUE );
 		this.mesh.visible = false;
 
-		// the torch of LocalLights (once that module is ported; harmless if it isn't)
-		import( '../materials/LocalLights.js' ).then( ( m ) => {
-
-			if ( m.FLASH ) this.setFlash( m.FLASH );
-
-		} ).catch( () => {} );
+		// the diver's torch (the flashlight of LocalLights)
+		this.setFlash( FLASH );
 
 	}
 

@@ -10,7 +10,9 @@ import { Shorebirds } from './Shorebirds.js';
 // WaterQuery slots handed out to whoever asks, read back 1-3 frames later. Falls back to sea level.
 class WaterHeights {
 
-	constructor( query, n = 8 ) {
+	// n: more than the birds that ask each frame (9 with the terns and pelicans): with fewer slots they
+	// take one another's every frame and the newest asker never gets past the warm-up (sea level)
+	constructor( query, n = 16 ) {
 
 		this.query = query;
 		this.n = n;

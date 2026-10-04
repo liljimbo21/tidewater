@@ -1,5 +1,5 @@
-// Gear and upgrade data. The upgrade shop (a vendor by the boathouse) is not built yet; everything
-// the game reads goes through gearStats( state.upgrades ), so buying a level is just
+// Gear and upgrade data, sold at Marta's chandlery by the boathouse (Chandlery.js). Everything the
+// game reads goes through gearStats( state.upgrades ), so buying a level is just
 // state.upgrades[ key ]++ and the stats follow.
 //
 // Each track: levels[ 0 ] is what you start with; cost is the price of that level (0 for the first).

@@ -201,8 +201,15 @@ export const GPU = {
 	computePass( label, fn, timestampWrites ) {
 
 		const pass = this.getEncoder().beginComputePass( { label, timestampWrites } );
-		fn( pass );
-		pass.end();
+		try {
+
+			fn( pass );
+
+		} finally {
+
+			pass.end();
+
+		}
 
 	},
 

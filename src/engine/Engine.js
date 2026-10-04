@@ -79,14 +79,27 @@ export class Engine {
 
 	start( update ) {
 
+		this._errors = 0;
 		const loop = ( t ) => {
 
+			// the next frame is requested first: an exception in one frame must not stop the loop for good
+			this._raf = requestAnimationFrame( loop );
 			this.clock.update( t );
 			let dt = this.clock.getDelta();
 			if ( dt > 0.1 ) dt = 0.1;
 			this.frame ++;
-			update( dt, this.clock.getElapsed() );
-			this._raf = requestAnimationFrame( loop );
+			try {
+
+				update( dt, this.clock.getElapsed() );
+				this._errors = 0;
+
+			} catch ( e ) {
+
+				// drop the half-recorded frame (it can hold an open pass); log the first of a run of failures
+				GPU.encoder = null;
+				if ( this._errors ++ === 0 ) console.error( e );
+
+			}
 
 		};
 

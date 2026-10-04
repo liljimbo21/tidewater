@@ -165,6 +165,29 @@ export class SoundScape {
 		const sw = WORLD.swellDir || { x: - 0.12, y: - 1 };
 		const l = Math.hypot( sw.x, sw.y ) || 1;
 		this._swell = { x: sw.x / l, z: sw.y / l }; // travel direction of the swell = towards the beach
+		// a hidden tab stops the frame loop, which would leave every loop playing at its last volume (the
+		// engine, the reel's drag, wind and surf): the context is suspended while the page is hidden
+		this._hiddenSuspend = false;
+		if ( typeof document !== 'undefined' ) document.addEventListener( 'visibilitychange', () => this._onVisibility() );
+
+	}
+
+	_onVisibility() {
+
+		const ctx = this.ctx;
+		if ( ! ctx || this._failed ) return;
+		if ( document.hidden ) {
+
+			if ( ctx.state !== 'running' ) return;
+			this._hiddenSuspend = true;
+			ctx.suspend().catch( ( e ) => this._warn( e ) );
+
+		} else if ( this._hiddenSuspend ) {
+
+			this._hiddenSuspend = false;
+			ctx.resume().catch( ( e ) => this._warn( e ) );
+
+		}
 
 	}
 

@@ -335,6 +335,7 @@ export class Shorebirds {
 
 			b.state = 'fly';
 			b.t = - rng() * 0.3; // take-off spread over a moment
+			b.approach = 0; // seconds on final approach
 			b.lx = dest + b.offset * 0.8;
 			b.lz = z1 - 0.5 - b.margin * 2;
 			const f = b.f;
@@ -381,23 +382,32 @@ export class Shorebirds {
 		let tx = F.px + hx * o[ 2 ] - hz * o[ 0 ], ty = F.py + o[ 1 ] * 0.6, tz = F.pz + hz * o[ 2 ] + hx * o[ 0 ];
 		const end = F.s >= F.len - 0.01;
 		const dl = Math.hypot( b.lx - f.x, b.lz - f.z );
-		if ( end || F.s > F.len - 14 ) {
+		const final = end || F.s > F.len - 14;
+		let speed;
+		if ( final ) {
 
-			// final approach to its own spot
+			// final approach to its own spot, slowing and sinking with the distance left: the turn radius
+			// shrinks with the speed (at cruise speed the bird overshot and circled its spot for good)
 			tx = b.lx; tz = b.lz;
-			ty = this.terrain.heightAt( b.lx, b.lz ) + Math.min( 1.2, dl * 0.25 );
+			ty = this.terrain.heightAt( b.lx, b.lz ) + Math.min( 1.2, dl * 0.1 );
+			speed = clamp( 3 + dl * 0.6, 3, 9 );
+			b.approach += dt;
+
+		} else {
+
+			const ahead = Math.hypot( tx - f.x, tz - f.z );
+			speed = clamp( 9 + ( ahead - 2 ) * 1.2, 5, 16 );
 
 		}
 
-		const ahead = Math.hypot( tx - f.x, tz - f.z );
-		const speed = clamp( 9 + ( ahead - 2 ) * 1.2, 5, 16 );
 		f.steer( dt, tx, ty, tz, speed, b.t < 0.6 ? 2 : 1, 2.2 );
 		const ground = Math.max( this.terrain.heightAt( f.x, f.z ), 0 );
 		if ( f.y < ground + 0.25 ) f.y = ground + 0.25;
 		f.flare = smooth( 3, 0.8, dl ) * ( end ? 1 : 0.5 );
 		f.legs = smooth( 2.5, 0.8, dl );
 		f.animate( dt );
-		if ( dl < 0.6 && f.y < ground + 0.45 && F.s > F.len - 14 ) {
+		// (after a long approach anywhere near the spot: a bird must never keep circling)
+		if ( final && ( ( dl < 1.2 && f.y < ground + 0.6 ) || ( b.approach > 8 && dl < 4 ) ) ) {
 
 			// touch down, running on a few steps
 			b.state = 'feed';

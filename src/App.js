@@ -90,7 +90,13 @@ export class App {
 		const progress = async ( p, text, until ) => {
 
 			onProgress( p, text, until );
-			if ( typeof requestAnimationFrame === 'function' ) await new Promise( ( r ) => requestAnimationFrame( () => setTimeout( r, 0 ) ) );
+			// (or a timeout: rAF never fires in a background tab, and loading should carry on there)
+			if ( typeof requestAnimationFrame === 'function' ) await new Promise( ( r ) => {
+
+				requestAnimationFrame( () => setTimeout( r, 0 ) );
+				setTimeout( r, 200 );
+
+			} );
 
 		};
 		await progress( 0.02, 'Starting WebGPU…' );
@@ -626,6 +632,9 @@ fn terrainWetness( xz: vec2f, h: f32 ) -> vec2f {
 		this.wake.update( dt );
 		if ( this.freeCam ) this.fly.update( dt );
 		else this.player.update( dt );
+		// nobody at the wheel while the free camera flies (the helm only reads the keys in player.update):
+		// throttle and rudder ease back instead of motoring on where they were left
+		if ( this.freeCam && this.boatCtl.driven ) this.boatCtl.setInput( 0, 0, dt );
 		this.game.update( dt );
 		this.updateSun();
 

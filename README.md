@@ -14,8 +14,8 @@ breach. It runs directly on WebGPU and WGSL with its own small rendering engine,
 ## Requirements
 
 - A browser with WebGPU: a recent Chrome, Edge or Safari.
-- A capable GPU. It targets 60 fps at 2560×1267 on an Apple M5 Pro, and dynamic resolution scales
-  the render down on slower machines.
+- A capable GPU. It targets 60 fps at 2560×1267 on an Apple M5 Pro. On slower machines, lower the
+  render scale in the settings panel (H, Performance).
 - The first load compiles several hundred shaders, which can take a minute or more. Later visits are
   faster because the browser caches them.
 
@@ -43,7 +43,7 @@ breach. It runs directly on WebGPU and WGSL with its own small rendering engine,
 
 **Sky**
 - Physically based atmosphere (Hillaire 2020) with a sun, moon and stars.
-- Volumetric cumulus and wispy cirrus with cloud shadows on the land.
+- Volumetric cumulus with cloud shadows on the land.
 - Aerial perspective and sea haze.
 - God rays, and a lens flare with occlusion.
 
@@ -59,7 +59,7 @@ breach. It runs directly on WebGPU and WGSL with its own small rendering engine,
 - A humpback whale with an escort of fish, blows, fluke dives and breaches.
 
 **Lighting and post**
-- Cascaded shadows with contact-hardening penumbrae, and screen-space contact shadows.
+- Cascaded shadows with contact-hardening penumbrae.
 - Ground bounce light.
 - GTAO ambient occlusion.
 - Temporal upscaling and sharpening.
@@ -79,7 +79,7 @@ breach. It runs directly on WebGPU and WGSL with its own small rendering engine,
 | Mouse | Look (click to capture the mouse, Esc to release) |
 | Shift | Sprint / boat boost |
 | Space | Jump / swim up |
-| C | Crouch / dive |
+| C | Dive (swimming) |
 | E | Interact: board the boat, take or leave the helm, step ashore, trade with the fish buyer or the chandlery |
 | V | Boat camera at the helm (1st / 3rd person) |
 | R | Take out / put away the fishing rod |
@@ -88,7 +88,7 @@ breach. It runs directly on WebGPU and WGSL with its own small rendering engine,
 | I or Tab | Cooler / fish hold and the fish log |
 | F | Free camera |
 | L | Flashlight |
-| T | Pause time |
+| T | Start / pause the time of day |
 | M | Mute |
 | H | Settings panel |
 | P | Photo mode |
@@ -141,7 +141,7 @@ Every push to `main` deploys to GitHub Pages through `.github/workflows/deploy.y
 | `src/sky/` | Atmosphere, clouds, sky and environment |
 | `src/world/` | Terrain, village, pier, reef, fish, vegetation, rocks, debris, wildlife, whale, boat |
 | `src/post/` | Post chain: AO, underwater composite, haze, TAAU, motion blur, bloom, lens flare, droplets |
-| `src/materials/` | Shared lighting: shadow filtering, bounce light, contact shadows, local lights, LOD fades |
+| `src/materials/` | Shared lighting: shadow filtering, bounce light, local lights, LOD fades |
 | `src/player/` | Walking, swimming, the boat and the free camera |
 | `src/audio/` | The sample-based soundscape |
 | `src/ui/` | Settings panel, loading screen and HUD |

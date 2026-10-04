@@ -62,8 +62,10 @@ Virtual Reality, 2020.
 
 ## Fonts
 
-[Inter](https://rsms.me/inter/) and [JetBrains Mono](https://www.jetbrains.com/lp/mono/) are both under the
-SIL Open Font License 1.1. They are loaded from Google Fonts at runtime and are not part of this repository.
+[Inter](https://rsms.me/inter/), [JetBrains Mono](https://www.jetbrains.com/lp/mono/), and, on the catch card,
+[Caveat Brush](https://fonts.google.com/specimen/Caveat+Brush) and [Kalam](https://fonts.google.com/specimen/Kalam)
+are all under the SIL Open Font License 1.1. They are loaded from Google Fonts at runtime and are not part of
+this repository.
 
 ## Libraries
 
@@ -88,5 +90,6 @@ These are published techniques. No code from the papers is included.
 | Rasterized caustics | Evan Wallace's *WebGL Water* approach |
 | Breaking waves | Guerrilla Games, *Horizon Forbidden West* water (SIGGRAPH 2022) |
 
-The cloud noise, lighting and sampling scheme (`src/sky/Clouds.js`) is adapted from DRG Software Solutions'
-own *Sky Pro WebGPU*. It is published here under this repository's MIT license by its copyright holder.
+The volumetric clouds (`src/sky/SkyProClouds.js`, and the noise, lighting and sampling scheme of the older
+`src/sky/Clouds.js`) are adapted from DRG Software Solutions' own *Sky Pro WebGPU*. That code is published here
+under this repository's MIT license by its copyright holder.

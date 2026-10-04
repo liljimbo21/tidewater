@@ -106,6 +106,7 @@ export class Game {
 
 		const r = this.state.buy( key );
 		if ( r ) this.toast( `${ UPGRADES[ key ].name }: ${ r.label }` );
+		if ( r && key === 'fuel' ) this._fuelOut = false; // a new tank comes full
 		return r;
 
 	}
@@ -134,7 +135,15 @@ export class Game {
 	get canFish() {
 
 		const app = this.app, p = app.player;
-		return ! app.freeCam && ( p.mode === 'walk' || p.mode === 'deck' ) && ! ( app.ui && app.ui.ui && app.ui.ui._photo );
+		return ! app.freeCam && ( p.mode === 'walk' || p.mode === 'deck' ) && ! this.photoMode;
+
+	}
+
+	// photo mode (P) hides the rod and takes no fishing input, but a line in the water (or a fish on) stays
+	get photoMode() {
+
+		const ui = this.app.ui && this.app.ui.ui;
+		return !! ( ui && ui._photo );
 
 	}
 
@@ -163,15 +172,16 @@ export class Game {
 
 		}
 
-		if ( ! can && rod.equipped ) {
+		if ( ! can && rod.equipped && ! this.photoMode ) {
 
-			// swimming, driving, free camera: the line comes in and the rod goes away
-			this.cancelLine( true );
+			// swimming, driving, free camera: the line comes in and the rod goes away (a fish on is lost)
+			this.cancelLine();
 			rod.equip( false );
 
 		}
 
-		if ( this.hud && ( inp.hit( 'KeyI' ) || inp.hit( 'Tab' ) ) ) this.hud.toggleInventory();
+		// (not during a fight: with the cooler open you can't reel, and the slack line loses the fish)
+		if ( this.hud && ! this.fight && ( inp.hit( 'KeyI' ) || inp.hit( 'Tab' ) ) ) this.hud.toggleInventory();
 		if ( this.hud && inp.hit( 'Escape' ) ) {
 
 			this.hud.toggleInventory( false );
@@ -186,7 +196,7 @@ export class Game {
 		this._rmb = rmb;
 		const panelOpen = this.hud && ( this.hud.invOpen || this.hud.standOpen );
 
-		if ( rod.equipped && ! panelOpen ) {
+		if ( rod.equipped && can && ! panelOpen ) {
 
 			if ( rod.state === 'idle' && lDown ) rod.startWindup();
 			else if ( rod.state === 'windup' && lUp ) rod.release();
@@ -202,7 +212,7 @@ export class Game {
 
 			} else if ( rod.state === 'flying' && rDown ) rod.retrieve();
 
-		}
+		} else if ( rod.state === 'windup' ) rod.setState( 'idle' ); // a panel or photo mode came up mid-windup: no cast
 
 		// bites and the fight
 		if ( rod.state === 'floating' ) this.updateBite( dt );
@@ -356,7 +366,8 @@ export class Game {
 
 		const hud = this.hud;
 		let near = null;
-		if ( p.mode === 'walk' ) for ( const v of this.vendors ) if ( v.inRange( p.position ) ) near = v;
+		// (not from the free camera: E flies up there, and the walker may be standing at a stall)
+		if ( p.mode === 'walk' && ! this.app.freeCam ) for ( const v of this.vendors ) if ( v.inRange( p.position ) ) near = v;
 		for ( const v of this.vendors ) v.talking = !! ( hud && hud.standOpen && hud.vendor === v );
 		if ( hud && hud.standOpen && ( ! near || near !== hud.vendor ) ) hud.closeStand();
 		if ( ! near || this.fight || this._cardDismissed || ( hud && hud.catchOpen ) ) return;
@@ -378,7 +389,7 @@ export class Game {
 
 		const r = this.state.sell();
 		if ( r.count ) this.toast( `Sold ${ r.count } fish for $${ r.total }` );
-		if ( this.app.audio && this.app.audio.coin ) this.app.audio.coin();
+		if ( r.count ) this.coin();
 		return r;
 
 	}
@@ -387,7 +398,14 @@ export class Game {
 
 		const r = this.state.sell( ids );
 		if ( r.count ) this.toast( `Sold for $${ r.total }` );
+		if ( r.count ) this.coin();
 		return r;
+
+	}
+
+	coin() {
+
+		if ( this.app.audio && this.app.audio.coin ) this.app.audio.coin();
 
 	}
 
@@ -426,7 +444,17 @@ export class Game {
 
 		}
 
-		this.bite = { phase: 'wait', t: biteDelay( this.habitat(), this.hour ) };
+		const t = biteDelay( this.habitat(), this.hour );
+		if ( ! Number.isFinite( t ) ) this.toast( 'Too shallow for fish here · cast into deeper water', 2400 );
+		this.bite = { phase: 'wait', t: this.biteWait( t ) };
+
+	}
+
+	// seconds until the next bite where the bobber is. Barren water (a few cm of swash) never gets one:
+	// look again in a while (the bobber may have drifted deeper) instead of waiting forever
+	biteWait( t = biteDelay( this.habitat(), this.hour ) ) {
+
+		return Number.isFinite( t ) ? t : 8;
 
 	}
 
@@ -478,7 +506,7 @@ export class Game {
 		} else if ( b.phase === 'take' ) {
 
 			this.toast( 'It took the bait and ran', 1800 );
-			this.bite = { phase: 'wait', t: biteDelay( this.habitat(), this.hour ) };
+			this.bite = { phase: 'wait', t: this.biteWait() };
 
 		}
 

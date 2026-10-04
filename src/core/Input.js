@@ -16,13 +16,23 @@ export class Input {
 		window.addEventListener( 'keydown', ( e ) => {
 
 			if ( e.target && ( e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA' ) ) return;
+			// browser shortcuts (Ctrl+F, Ctrl+L, Cmd+…) are not game keys; on macOS a key held with Cmd
+			// never gets its keyup either
+			if ( e.ctrlKey || e.metaKey || e.altKey ) return;
 			if ( ! this.keys.has( e.code ) ) this.pressed.add( e.code );
 			this.keys.add( e.code );
 			if ( [ 'Space', 'ArrowUp', 'ArrowDown', 'Tab' ].includes( e.code ) ) e.preventDefault();
 
 		} );
 		window.addEventListener( 'keyup', ( e ) => this.keys.delete( e.code ) );
-		window.addEventListener( 'blur', () => this.keys.clear() );
+		// (a button released outside the window never sends its mouseup: reeling or winding up would stick)
+		window.addEventListener( 'blur', () => {
+
+			this.keys.clear();
+			this.mouseDown = false;
+			this.rightDown = false;
+
+		} );
 
 		dom.addEventListener( 'mousedown', ( e ) => {
 
@@ -101,6 +111,8 @@ export class Input {
 	endFrame() {
 
 		this.pressed.clear();
+		// the wheel is only read at the boat's helm: ticks from elsewhere must not pile up until then
+		this.wheel = 0;
 
 	}
 

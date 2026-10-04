@@ -199,6 +199,8 @@ fn main( @builtin( global_invocation_id ) gid: vec3u ) {
 
 	setShoreField( f ) {
 
+		// kept on the CPU too: ShoreWaves.buildDirTexture() resamples it (the GPU texture can't be read back)
+		this.shoreField = f;
 		this.shoreRes = f.res;
 		if ( this.shoreTexture.width !== f.res ) {
 

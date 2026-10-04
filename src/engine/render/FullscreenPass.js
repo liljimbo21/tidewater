@@ -67,7 +67,9 @@ export class FullscreenPass {
 
 	draw( rp, frameBlock = FrameUniforms ) {
 
-		rp.setPipeline( GPU.ready( this.handle ) );
+		const pipeline = GPU.ready( this.handle );
+		if ( ! pipeline ) return; // the shader failed to compile (logged by GPU)
+		rp.setPipeline( pipeline );
 		rp.setBindGroup( 0, group0ForBlock( frameBlock, 'render' ).getBindGroup() );
 		rp.setBindGroup( 1, this.bindings.getBindGroup() );
 		rp.draw( 3 );

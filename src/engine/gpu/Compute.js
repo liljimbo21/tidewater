@@ -53,7 +53,9 @@ export class ComputeKernel {
 		if ( ! indirect && ( x === 0 || y === 0 || z === 0 ) ) return;
 		const run = ( p ) => {
 
-			p.setPipeline( GPU.ready( this.handle ) );
+			const pipeline = GPU.ready( this.handle );
+			if ( ! pipeline ) return; // the shader failed to compile (logged by GPU)
+			p.setPipeline( pipeline );
 			p.setBindGroup( 0, this.group0.getBindGroup() );
 			p.setBindGroup( 1, this.bindings.getBindGroup() );
 			if ( indirect ) p.dispatchWorkgroupsIndirect( indirect.buffer.getGPU ? indirect.buffer.getGPU() : indirect.buffer, indirect.offset || 0 );

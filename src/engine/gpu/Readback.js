@@ -1,4 +1,4 @@
-import { GPU } from './GPU.js';
+import { GPU, formatInfo } from './GPU.js';
 
 // Asynchronous GPU -> CPU readback of a storage buffer range, a few frames late.
 //
@@ -91,7 +91,6 @@ export async function readBuffer( src, byteLength, srcOffset = 0 ) {
 // One-off read of a texture level (rows unpadded in the result).
 export async function readTexture( texture, { mip = 0, layer = 0, bytesPerTexel = null } = {} ) {
 
-	const { formatInfo } = await import( './GPU.js' );
 	const bpp = bytesPerTexel || formatInfo( texture.format ).bytes;
 	const w = Math.max( 1, texture.width >> mip ), h = Math.max( 1, texture.height >> mip );
 	const rowBytes = w * bpp;

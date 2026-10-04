@@ -2143,7 +2143,7 @@ export class UI {
 						${ row( mouse, 'Look around<small>Click to capture</small>' ) }
 						${ row( k( 'Shift' ), 'Sprint, boat boost' ) }
 						${ row( k( 'Space' ), 'Jump, swim up' ) }
-						${ row( k( 'C' ), 'Crouch, dive' ) }
+						${ row( k( 'C' ), 'Dive (swimming)' ) }
 					</section>
 					<section>
 						<h3>Interact</h3>
@@ -2154,7 +2154,7 @@ export class UI {
 						${ row( k( 'RMB' ), 'Reel in an empty line' ) }
 						${ row( k( 'I' ), 'Cooler and fish log' ) }
 						${ row( k( 'F' ), 'Free camera' ) }
-						${ row( k( 'T' ), 'Pause time' ) }
+						${ row( k( 'T' ), 'Start / pause time' ) }
 						${ row( k( 'L' ), 'Flashlight' ) }
 						${ row( k( 'M' ), 'Mute' ) }
 					</section>

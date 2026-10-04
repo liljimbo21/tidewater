@@ -208,6 +208,9 @@ export class GameHUD {
 		// panels (interactive)
 		this.inv = h( 'div', 'gm-panel tw-glass tw-interactive' );
 		this.stand = h( 'div', 'gm-panel tw-glass tw-interactive' );
+		// closed panels are only faded out: inert keeps their last Sell / Buy / Release buttons out of
+		// keyboard focus (Tab, Enter) and the accessibility tree
+		this.inv.inert = this.stand.inert = true;
 		ui.root.append( this.inv, this.stand );
 		this.invOpen = false;
 		this.standOpen = false;
@@ -379,6 +382,7 @@ export class GameHUD {
 		}
 
 		this.inv.classList.toggle( 'is-open', this.invOpen );
+		this.inv.inert = ! this.invOpen;
 
 	}
 
@@ -394,7 +398,23 @@ export class GameHUD {
 			${ logged ? `<div class="gm-log"><b>Fish log</b><br>${ logged }</div>` : '' }
 			<div class="gm-foot"><span class="gm-sub">Sell at the fish stand by the pier</span><button class="gm-btn is-ghost" data-close>Close (I)</button></div>`;
 		this.inv.querySelector( '[data-close]' ).onclick = () => this.toggleInventory( false );
-		for ( const b of this.inv.querySelectorAll( '[data-release]' ) ) b.onclick = () => s.release( Number( b.dataset.release ) );
+		for ( const b of this.inv.querySelectorAll( '[data-release]' ) ) b.onclick = this._act( () => s.release( Number( b.dataset.release ) ) );
+
+	}
+
+	// Click handler for a panel action (buy, sell, release, refuel). Each action rebuilds the panel, which
+	// puts the next level's (or the next fish's) button under the pointer: the second click of a double
+	// click is dropped instead of buying or releasing again.
+	_act( fn ) {
+
+		return () => {
+
+			const t = performance.now();
+			if ( this._actT !== undefined && t - this._actT < 350 ) return;
+			this._actT = t;
+			fn();
+
+		};
 
 	}
 
@@ -407,6 +427,7 @@ export class GameHUD {
 		if ( vendor.kind === 'shop' ) this.renderShop();
 		else this.renderStand();
 		this.stand.classList.add( 'is-open' );
+		this.stand.inert = false;
 		releaseMouse();
 
 	}
@@ -415,6 +436,7 @@ export class GameHUD {
 
 		this.standOpen = false;
 		this.stand.classList.remove( 'is-open' );
+		this.stand.inert = true;
 
 	}
 
@@ -429,8 +451,8 @@ export class GameHUD {
 			<div class="gm-list">${ rows || '<div class="gm-empty">Your cooler is empty.</div>' }</div>
 			<div class="gm-foot"><button class="gm-btn is-ghost" data-close>Leave (E)</button><button class="gm-btn" data-all ${ s.inventory.length ? '' : 'disabled' }>Sell all · $${ s.holdValue }</button></div>`;
 		this.stand.querySelector( '[data-close]' ).onclick = () => this.closeStand();
-		this.stand.querySelector( '[data-all]' ).onclick = () => this.game.sellAll();
-		for ( const b of this.stand.querySelectorAll( '[data-sell]' ) ) b.onclick = () => this.game.sell( [ Number( b.dataset.sell ) ] );
+		this.stand.querySelector( '[data-all]' ).onclick = this._act( () => this.game.sellAll() );
+		for ( const b of this.stand.querySelectorAll( '[data-sell]' ) ) b.onclick = this._act( () => this.game.sell( [ Number( b.dataset.sell ) ] ) );
 
 	}
 
@@ -458,9 +480,9 @@ GameHUD.prototype.renderShop = function () {
 		<div class="gm-list">${ fuelRow }${ rows }</div>
 		<div class="gm-foot"><span class="gm-sub">Upgrades take effect at once</span><button class="gm-btn is-ghost" data-close>Leave (E)</button></div>`;
 	this.stand.querySelector( '[data-close]' ).onclick = () => this.closeStand();
-	for ( const b of this.stand.querySelectorAll( '[data-buy]' ) ) b.onclick = () => this.game.buy( b.dataset.buy );
+	for ( const b of this.stand.querySelectorAll( '[data-buy]' ) ) b.onclick = this._act( () => this.game.buy( b.dataset.buy ) );
 	const f = this.stand.querySelector( '[data-fuel]' );
-	if ( f ) f.onclick = () => this.game.refuel();
+	if ( f ) f.onclick = this._act( () => this.game.refuel() );
 
 };
 

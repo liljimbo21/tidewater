@@ -195,15 +195,44 @@ export class GameState {
 	fromJSON( d ) {
 
 		if ( ! d || d.v !== 1 ) return false;
-		this.money = Number.isFinite( d.money ) ? d.money : 0;
-		this.inventory = Array.isArray( d.inventory ) ? d.inventory.filter( ( f ) => f && FISH[ f.species ] && Number.isFinite( f.kg ) ) : [];
-		// saves from before lengths were recorded
-		for ( const f of this.inventory ) if ( ! Number.isFinite( f.cm ) ) f.cm = Math.round( fishLengthCm( f.species, f.kg ) );
-		this.log = d.log && typeof d.log === 'object' ? d.log : {};
-		for ( const [ k, v ] of Object.entries( this.log ) ) if ( FISH[ k ] && v && v.bestKg > 0 && ! Number.isFinite( v.bestCm ) ) v.bestCm = Math.round( fishLengthCm( k, v.bestKg ) );
-		this.upgrades = { ...defaultUpgrades(), ...( d.upgrades || {} ) };
-		this.fuel = Number.isFinite( d.fuel ) ? d.fuel : null;
-		this._nextId = Math.max( d.nextId | 0, ...this.inventory.map( ( f ) => f.id + 1 ), 1 );
+		// a damaged or hand-edited save must not reach the HUD (an out-of-range level or a missing best
+		// weight throws there, which stops the frame loop) or the wallet (a fish without a value makes it NaN)
+		this.money = Number.isFinite( d.money ) ? Math.max( 0, d.money ) : 0;
+		const ids = new Set();
+		this.inventory = [];
+		for ( const f of Array.isArray( d.inventory ) ? d.inventory : [] ) {
+
+			if ( ! f || ! FISH[ f.species ] || ! Number.isFinite( f.kg ) || f.kg <= 0 ) continue;
+			// saves from before lengths were recorded
+			if ( ! Number.isFinite( f.cm ) ) f.cm = Math.round( fishLengthCm( f.species, f.kg ) );
+			if ( ! Number.isFinite( f.value ) ) f.value = fishValue( f.species, f.kg );
+			if ( Number.isInteger( f.id ) && ! ids.has( f.id ) ) ids.add( f.id );
+			else f.id = null; // numbered below
+			this.inventory.push( f );
+
+		}
+
+		this._nextId = Math.max( Number.isInteger( d.nextId ) ? d.nextId : 1, ...[ ...ids ].map( ( id ) => id + 1 ), 1 );
+		for ( const f of this.inventory ) if ( f.id === null ) f.id = this._nextId ++;
+		this.log = {};
+		for ( const [ k, v ] of Object.entries( d.log && typeof d.log === 'object' ? d.log : {} ) ) {
+
+			if ( ! FISH[ k ] || ! v || ! Number.isFinite( v.count ) ) continue;
+			const bestKg = Number.isFinite( v.bestKg ) ? v.bestKg : 0;
+			const bestCm = Number.isFinite( v.bestCm ) ? v.bestCm : bestKg > 0 ? Math.round( fishLengthCm( k, bestKg ) ) : 0;
+			this.log[ k ] = { ...v, bestKg, bestCm };
+
+		}
+
+		this.upgrades = defaultUpgrades();
+		for ( const k in this.upgrades ) {
+
+			const level = d.upgrades && d.upgrades[ k ];
+			if ( Number.isInteger( level ) ) this.upgrades[ k ] = Math.min( Math.max( level, 0 ), UPGRADES[ k ].levels.length - 1 );
+
+		}
+
+		this.fuel = Number.isFinite( d.fuel ) ? Math.max( 0, d.fuel ) : null;
 		return true;
 
 	}

@@ -487,7 +487,10 @@ export class WhaleBrain {
 		// ---- advance along the route (horizontal speed shrinks when steeply pitched)
 		const du = this.speed * Math.cos( this.pitch ) * dt;
 		this.u += du;
+		const x0 = this.position.x, y0 = this.position.y, z0 = this.position.z;
 		this._place( dt );
+		// the escort fish match this velocity (Fish.js stepEscort: damping and their speed cap)
+		if ( dt > 0 ) this.velocity.set( ( this.position.x - x0 ) / dt, ( this.position.y - y0 ) / dt, ( this.position.z - z0 ) / dt );
 		// path history (orientation at this travelled distance)
 		this.arc += du;
 		this._record( this.arc );
